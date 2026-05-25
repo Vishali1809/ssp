@@ -1,0 +1,116 @@
+Created At: 2026-05-25T05:03:43Z
+Completed At: 2026-05-25T05:03:43Z
+File Path: `file:///c:/Users/Vishali%20Senthilkumar/Downloads/ssp%20rules/static/css/style.css`
+Total Lines: 901
+Total Bytes: 22118
+Showing lines 1 to 800
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: /* ==========================================================================
+2:    Salem Steel Plant - Modern Corporate Design System
+3:    ========================================================================== */
+4: 
+5: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+6: 
+7: /* --- CSS Variables / Design Tokens --- */
+8: :root {
+9:   /* Color Palette - Light Mode */
+10:   --c-primary: #0A4B8F; /* SAIL Logo Navy Blue */
+11:   --c-primary-hover: #073669;
+12:   --c-primary-light: #E6EEF7;
+13:   --c-accent: #EE7F1B; /* Corporate Orange Accent */
+14:   --c-accent-hover: #D66B0E;
+15:   
+16:   --c-bg-main: #F8FAFC;
+17:   --c-bg-card: rgba(255, 255, 255, 0.85); /* Glassmorphism base */
+18:   --c-bg-card-solid: #FFFFFF;
+19:   --c-bg-secondary: #F1F5F9;
+20:   --c-bg-tertiary: #E2E8F0;
+21:   
+22:   --c-text-main: #0F172A;
+23:   --c-text-muted: #475569;
+24:   --c-text-light: #94A3B8;
+25:   
+26:   --c-border: rgba(203, 213, 225, 0.6);
+27:   --c-border-solid: #E2E8F0;
+28:   --c-shadow-color: rgba(10, 75, 143, 0.08);
+29:   
+30:   /* Status Colors */
+31:   --c-success: #10B981;
+32:   --c-success-bg: #ECFDF5;
+33:   --c-warning: #F59E0B;
+34:   --c-warning-bg: #FFFBEB;
+35:   --c-danger: #EF4444;
+36:   --c-danger-bg: #FEF2F2;
+37: 
+38:   /* Typography */
+39:   --font-main: 'Inter', sans-serif;
+40:   --font-heading: 'Poppins', sans-serif;
+41: 
+42:   /* Spacing */
+43:   --spacing-xs: 0.25rem;
+44:   --spacing-sm: 0.5rem;
+45:   --spacing-md: 1rem;
+46:   --spacing-lg: 1.5rem;
+<truncated 20259 bytes>
+: }
+741: .rule-item-card:hover {
+742:   border-color: var(--c-primary-light);
+743:   box-shadow: 0 4px 15px -3px var(--c-shadow-color);
+744:   transform: translateY(-2px);
+745: }
+746: .rule-meta-badges {
+747:   display: flex;
+748:   flex-wrap: wrap;
+749:   gap: var(--spacing-sm);
+750:   margin-bottom: var(--spacing-sm);
+751: }
+752: .badge {
+753:   padding: 0.2rem 0.5rem;
+754:   border-radius: var(--radius-sm);
+755:   font-size: 0.625rem;
+756:   font-weight: 800;
+757:   text-transform: uppercase;
+758:   letter-spacing: 0.05em;
+759:   border: 1px solid var(--c-border);
+760: }
+761: .badge-dept { background: var(--c-primary-light); color: var(--c-primary); border-color: rgba(10, 75, 143, 0.2); }
+762: .badge-cat { background: var(--c-bg-secondary); color: var(--c-text-muted); }
+763: .badge-year { background: rgba(238, 127, 27, 0.1); color: var(--c-accent); border-color: rgba(238, 127, 27, 0.2); }
+764: 
+765: .rule-item-title {
+766:   font-size: 1rem;
+767:   font-weight: 700;
+768:   margin-bottom: 0.25rem;
+769:   color: var(--c-text-main);
+770: }
+771: .rule-item-desc {
+772:   font-size: 0.875rem;
+773:   color: var(--c-text-muted);
+774: }
+775: 
+776: /* --- Modal --- */
+777: .modal-overlay {
+778:   position: fixed;
+779:   inset: 0;
+780:   background: rgba(15, 23, 42, 0.7);
+781:   backdrop-filter: blur(8px);
+782:   -webkit-backdrop-filter: blur(8px);
+783:   z-index: 999;
+784:   display: flex;
+785:   align-items: center;
+786:   justify-content: center;
+787:   padding: var(--spacing-md);
+788:   opacity: 0;
+789:   visibility: hidden;
+790:   transition: all var(--transition-normal);
+791: }
+792: .modal-overlay.active {
+793:   opacity: 1;
+794:   visibility: visible;
+795: }
+796: .modal-container {
+797:   background: var(--c-bg-card-solid);
+798:   border: 1px solid var(--c-border-solid);
+799:   border-radius: var(--radius-2xl);
+800:   width: 100%;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

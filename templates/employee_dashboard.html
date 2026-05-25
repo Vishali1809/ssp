@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block title %}Employee Portal{% endblock %}
+
+{% block content %}
+
+<!-- Employee Header Bar -->
+<div style="background: linear-gradient(135deg, #0f3a63 0%, #1a5276 100%);" class="py-6 px-4">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <p class="text-blue-200 text-xs uppercase tracking-wider font-semibold">Employee Self-Service Portal</p>
+                <h1 class="text-white text-2xl font-black mt-1" style="font-family:'Rajdhani',sans-serif;">
+                    HR Rules & Policies Library
+                </h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 rounded-xl px-4 py-2 border border-white/20">
+                    <p class="text-blue-200 text-xs">Logged in as</p>
+                    <p class="text-white font-bold text-sm">{{ session.get('full_name') or session.get('username') }}</p>
+                    <p class="text-blue-300 text-xs">{{ session.get('department') }} Department</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Search + Filter Bar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+        <div class="flex flex-col lg:flex-row gap-6">
+
+            <!-- Search Input -->
+            <div class="flex-1">
+                <label class="form-label">Search Rules</label>
+                <div class="search-container flex items-center gap-2 p-2 pl-4 mt-1">
+                    <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="searchInput" class="search-input flex-1 py-2"
+                           placeholder="Search by title, keyword, category..."
+                           autocomplete="off"
+                           value="{{ request.args.get('q','') }}">
+                    <button id="langToggleBtn" class="px-2 py-1 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition flex-shrink-0">EN</button>
+                    <button id="voiceSearchBtn" class="p-2 rounded-xl text-gray-500 hover:text-sail-blue hover:bg-blue-50 transition flex-shrink-0" title="Voice Search">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Department Filter -->
+            <div class="lg:w-48">
+                <label class="form-label">Department</label>
+                <select id="deptFilter" class="form-input mt-1" onchange="applyDeptFilter(this.value)">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.department }}" {% if active_dept == dept.department %}selected{% endif %}>
+                        {{ dept.department }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+
+        <!-- Year Slider -->
+        <div class="mt-6">
+            <div class="flex justify-between items-center mb-2">
+                <label class="form-label mb-0">
+                    Timeline Filter
+                    <span class="text-gray-400 font-normal normal-case ml-2">
+                        Active Year: <span id="yearDisplay" class="text-sail-blue font-black text-lg">All</span>
+                    </span>
+                </label>
+                <button id="resetTimelineBtn" class="text-xs text-sail-blue font-bold px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition">
+                    View All Years
+                </button>
+            </div>
+            <div class="px-2">
+                <input type="range" id="yearSlider" min="1969" max="2030" value="1969" class="w-full">
+                <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                    <span>1970</span><span>1980</span><span>1990</span>
+                    <span>2000</span><span>2010</span><span>2020</span><span>2030</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Dept Filter Badge -->
+        {% if active_dept %}
+        <div class="mt-4 flex items-center gap-2">
+            <span class="text-sm text-gray-500">Filtered by:</span>
+            <span class="bg-sail-blue text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2">
+                {{ active_dept }}
+                <a href="{{ url_for('employee_dashboard') }}" class="text-white/70 hover:text-white ml-1">✕</a>
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Results Count -->
+    <div class="flex justify-between items-center mb-5">
+        <p class="text-sm text-gray-600">
+            Showing <span id="visibleCount" class="font-bold text-sail-blue">{{ rules|length }}</span>
+            of {{ rules|length }} rules
+        </p>
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+            <span>📋 Read-only view</span>
+            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+            <span>Download available for documents</span>
+        </div>
+    </div>
+
+    <!-- Rules Grid -->
+    <div id="rulesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for rule in rules %}
+        <div class="rule-card flex flex-col rule-card-item"
+             data-title="{{ rule.title|lower }}"
+             data-desc="{{ rule.description_text|lower }}"
+             data-dept="{{ rule.department|lower }}"
+             data-cat="{{ rule.category|lower }}"
+             data-year="{{ rule.year }}">
+
+            <div class="rule-card-header"></div>
+
+            <div class="p-6 flex-1 flex flex-col">
+                <!-- Badges -->
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="dept-badge">{{ rule.department }}</span>
+                    <span class="cat-badge">{{ rule.category }}</span>
+                    <span class="year-badge ml-auto">{{ rule.year }}</span>
+                </div>
+
+                <!-- Title -->
+                <h3 class="font-bold text-gray-900 text-base leading-tight mb-2">{{ rule.title }}</h3>
+
+                <!-- Description -->
+                <p class="text-gray-600 text-sm leading-relaxed line-clamp-3 flex-1">
+                    {{ rule.description_text }}
+                </p>
+
+                <!-- AI Summary -->
+                {% if rule.summary %}
+                <div class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p class="text-xs text-blue-700 leading-relaxed">
+                        <span class="font-bold text-sail-blue">✦ AI Summary:</span>
+                        {{ rule.summary }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                <div class="text-xs text-gray-400 space-y-0.5">
+                    <div>Updated: {{ rule.updated_at | ddmmyyyy }}</div>
+                    {% if rule.view_count > 0 %}
+                    <div>{{ rule.view_count }} views</div>
+                    {% endif %}
+                </div>
+                {% if rule.file_path %}
+                <a href="{{ url_for('download', rule_id=rule.id) }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 bg-sail-blue hover:bg-sail-mid text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Download
+                </a>
+                {% else %}
+                <span class="text-xs text-gray-400 italic">Text Only</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-3 bg-white rounded-2xl p-16 text-center shadow-sm border border-gray-100">
+            <div class="text-5xl mb-4">📂</div>
+            <h3 class="text-lg font-bold text-gray-700">No Rules Found</h3>
+            <p class="text-gray-500 text-sm mt-2">
+                {% if active_dept %}
+                No rules found for the <strong>{{ active_dept }}</strong> department yet.
+                {% else %}
+                No HR rules have been published yet.
+                {% endif %}
+            </p>
+            <a href="{{ url_for('employee_dashboard') }}" class="inline-block mt-4 text-sail-blue font-bold text-sm hover:underline">
+                ← View All Departments
+            </a>
+        </div>
+        {% endfor %}
+
+        <!-- JS no-results message -->
+        <div id="noResultsMsg" class="hidden col-span-3 bg-white rounded-2xl p-16 text-center shadow-sm border border-gray-100">
+            <div class="text-5xl mb-4">🔍</div>
+            <h3 class="text-lg font-bold text-gray-700">No Matching Rules</h3>
+            <p class="text-gray-500 text-sm mt-2">Try different keywords or adjust the year filter.</p>
+        </div>
+    </div>
+
+    <!-- Department Quick Links -->
+    <div class="mt-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span>🏢</span> Browse by Department
+        </h3>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('employee_dashboard') }}"
+               class="px-4 py-2 rounded-xl text-sm font-bold border-2 transition
+                      {% if not active_dept %}bg-sail-blue text-white border-sail-blue{% else %}text-sail-blue border-sail-blue hover:bg-blue-50{% endif %}">
+                All Departments
+            </a>
+            {% for dept in departments %}
+            <a href="{{ url_for('employee_dashboard') }}?dept={{ dept.department }}"
+               class="px-4 py-2 rounded-xl text-sm font-bold border-2 transition
+                      {% if active_dept == dept.department %}bg-sail-blue text-white border-sail-blue{% else %}text-sail-blue border-sail-blue hover:bg-blue-50{% endif %}">
+                {{ dept.department }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Notice Box -->
+    <div class="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+        <span class="text-xl flex-shrink-0">🔒</span>
+        <div>
+            <p class="text-amber-800 font-bold text-sm">Read-Only Access</p>
+            <p class="text-amber-700 text-xs mt-1">
+                You are logged in as an employee. You can search, filter, and download HR documents.
+                To make changes, contact the HR Administrator.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Dept filter redirect
+function applyDeptFilter(val) {
+    const url = new URL(window.location.href);
+    if (val) url.searchParams.set('dept', val);
+    else url.searchParams.delete('dept');
+    window.location.href = url.toString();
+}
+
+// Pre-fill search from URL param
+const urlQ = new URLSearchParams(window.location.search).get('q');
+if (urlQ && document.getElementById('searchInput')) {
+    document.getElementById('searchInput').value = urlQ;
+}
+</script>
+{% endblock %}

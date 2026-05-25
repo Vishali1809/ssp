@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════ HERO SECTION ═══════════════════════ -->
+<section class="hero-section py-20 px-4">
+    <div class="hero-grid-pattern"></div>
+    <div class="max-w-screen-xl mx-auto relative z-10">
+        <div class="flex flex-col lg:flex-row items-center gap-12">
+
+            <!-- Hero Text -->
+            <div class="flex-1 text-center lg:text-left">
+                <!-- SAIL Official Stamp -->
+                <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6 border border-white/20">
+                    <div class="w-2 h-2 bg-sail-accent rounded-full animate-pulse"></div>
+                    <span class="text-blue-200 text-xs font-semibold tracking-wider uppercase">
+                        SAIL · Official Internal HR Portal
+                    </span>
+                </div>
+
+                <h1 class="hero-title text-white text-5xl lg:text-6xl mb-4">
+                    Salem Steel Plant<br>
+                    <span style="color: #c9a227;">HR Rules</span> Portal
+                </h1>
+
+                <p class="text-blue-200 text-lg mb-8 leading-relaxed max-w-xl">
+                    Centralized repository of HR policies, circulars, compliance guidelines,
+                    and corporate directives — from 1970 to present day.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+                    {% if not session.get('user_id') %}
+                    <a href="{{ url_for('login') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
+                        👤 Employee Login
+                    </a>
+                    <a href="{{ url_for('login') }}?tab=admin" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
+                        🔐 Admin Access
+                    </a>
+                    {% elif session.get('role') == 'employee' %}
+                    <a href="{{ url_for('employee_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
+                        📋 Go to My Portal →
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
+                        ⚙ Go to Admin Dashboard →
+                    </a>
+                    {% endif %}
+                    <a href="#rules" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
+                        📖 Browse Rules
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hero Stats Panel -->
+            <div class="flex-shrink-0 w-full lg:w-80">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="stats-card p-5 text-center">
+                        <div class="text-3xl font-black text-white">{{ total_rules }}</div>
+                        <div class="text-blue-200 text-xs mt-1 font-medium">HR Rules & Policies</div>
+                    </div>
+                    <div class="stats-card p-5 text-center">
+                        <div class="text-3xl font-black text-sail-accent">{{ total_dept }}</div>
+                        <div class="text-blue-200 text-xs mt-1 font-medium">Departments</div>
+                    </div>
+                    <div class="stats-card p-5 text-center">
+                        <div class="text-3xl font-black text-white">{{ year_from }}</div>
+                        <div class="text-blue-200 text-xs mt-1 font-medium">Est. Since</div>
+                    </div>
+                    <div class="stats-card p-5 text-center">
+                        <div class="text-3xl font-black text-sail-accent">{{ year_to }}</div>
+                        <div class="text-blue-200 text-xs mt-1 font-medium">Latest Year</div>
+                    </div>
+                </div>
+
+                <!-- Plant Icon -->
+                <div class="mt-6 bg-white/5 rounded-2xl p-5 border border-white/10 text-center">
+                    <svg viewBox="0 0 120 80" class="w-full h-20 mx-auto opacity-60">
+                        <!-- Simplified steel plant silhouette -->
+                        <rect x="10" y="50" width="20" height="30" fill="#2e86c1"/>
+                        <rect x="15" y="30" width="10" height="22" fill="#1a5276"/>
+                        <rect x="14" y="28" width="12" height="5" fill="#c9a227"/>
+                        <rect x="35" y="40" width="30" height="40" fill="#2e86c1"/>
+                        <rect x="42" y="20" width="8" height="22" fill="#1a5276"/>
+                        <rect x="52" y="15" width="8" height="27" fill="#1a5276"/>
+                        <rect x="41" y="18" width="20" height="5" fill="#c9a227"/>
+                        <rect x="70" y="45" width="25" height="35" fill="#2e86c1"/>
+                        <rect x="76" y="25" width="8" height="22" fill="#1a5276"/>
+                        <rect x="75" y="23" width="10" height="5" fill="#c9a227"/>
+                        <rect x="100" y="55" width="15" height="25" fill="#2e86c1"/>
+                        <!-- Ground -->
+                        <rect x="0" y="78" width="120" height="2" fill="#c9a227"/>
+                        <!-- Smoke puffs -->
+                        <circle cx="19" cy="22" r="5" fill="rgba(255,255,255,0.15)"/>
+                        <circle cx="50" cy="10" r="6" fill="rgba(255,255,255,0.12)"/>
+                        <circle cx="80" cy="19" r="5" fill="rgba(255,255,255,0.10)"/>
+                    </svg>
+                    <div class="text-blue-200 text-xs font-medium mt-1">Salem Steel Plant, Tamil Nadu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ ANNOUNCEMENT TICKER ═══════════════════ -->
+{% if announcements %}
+<div class="announcement-bar py-2 px-0">
+    <div class="ticker-wrapper">
+        <div class="bg-sail-blue text-white text-xs font-bold px-4 py-2 flex-shrink-0 z-10 uppercase tracking-wider">
+            📢 Announcements
+        </div>
+        <div class="ticker-content">
+            {% for ann in announcements %}
+                <span class="text-sail-blue font-semibold text-sm px-8">
+                    🔹 {{ ann.title }} — {{ ann.content[:80] }}…
+                </span>
+            {% endfor %}
+            <!-- Duplicate for seamless loop -->
+            {% for ann in announcements %}
+                <span class="text-sail-blue font-semibold text-sm px-8">
+                    🔹 {{ ann.title }} — {{ ann.content[:80] }}…
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════════ SEARCH BAR ════════════════════════════ -->
+<div class="bg-white border-b border-gray-100 py-8 px-4 shadow-sm">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-4">
+            <p class="text-sail-blue font-semibold text-sm tracking-wider uppercase">Quick Search</p>
+            <h2 class="text-2xl font-bold text-gray-800 mt-1">Find HR Rules & Policies</h2>
+        </div>
+        <div class="search-container flex items-center gap-2 p-2 pl-4">
+            <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" id="heroSearch" class="search-input flex-1 py-2" 
+                   placeholder="Search by keyword, department, or category..."
+                   autocomplete="off">
+            <!-- Voice Toggle -->
+            <button id="langToggleBtn" class="px-2 py-1 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition flex-shrink-0">EN</button>
+            <!-- Voice Mic -->
+            <button id="voiceSearchBtn" class="p-2 rounded-xl text-gray-500 hover:text-sail-blue hover:bg-blue-50 transition flex-shrink-0" title="Voice Search">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                </svg>
+            </button>
+            <a href="{{ url_for('employee_dashboard') }}" class="btn-primary text-sm px-5 py-2 flex-shrink-0" onclick="this.href=this.href+'?q='+document.getElementById('heroSearch').value">
+                Search
+            </a>
+        </div>
+        <!-- Suggestions dropdown -->
+        <div id="searchSuggestions" class="relative max-w-3xl mx-auto hidden">
+            <div class="search-suggestions absolute w-full"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════ DEPARTMENT CARDS ═════════════════════ -->
+<section class="py-14 px-4 bg-sail-bg">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="text-center mb-10">
+            <p class="text-sail-blue font-semibold text-sm tracking-wider uppercase">Browse by Department</p>
+            <h2 class="section-title text-3xl mt-1">Department Wise Policies</h2>
+            <p class="text-gray-500 text-sm mt-2">Click on a department to explore its rules and guidelines</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <!-- HR -->
+            <a href="{{ url_for('employee_dashboard') }}?dept=HR" class="dept-card p-6 text-center block no-underline">
+                <div class="dept-icon bg-blue-100 mx-auto mb-4">👥</div>
+                <h3 class="font-bold text-gray-800 text-sm">Human Resources</h3>
+                <p class="text-xs text-gray-500 mt-1">Leave, Benefits, Appraisal</p>
+            </a>
+            <!-- Safety -->
+            <a href="{{ url_for('employee_dashboard') }}?dept=Safety" class="dept-card p-6 text-center block no-underline">
+                <div class="dept-icon bg-red-100 mx-auto mb-4">⛑️</div>
+                <h3 class="font-bold text-gray-800 text-sm">Safety & Health</h3>
+                <p class="text-xs text-gray-500 mt-1">PPE, Emergency, Compliance</p>
+            </a>
+            <!-- Production -->
+            <a href="{{ url_for('employee_dashboard') }}?dept=Production" class="dept-card p-6 text-center block no-underline">
+                <div class="dept-icon bg-orange-100 mx-auto mb-4">🏭</div>
+                <h3 class="font-bold text-gray-800 text-sm">Production</h3>
+                <p class="text-xs text-gray-500 mt-1">Shifts, Operations, Output</p>
+            </a>
+            <!-- Management -->
+            <a href="{{ url_for('employee_dashboard') }}?dept=Management" class="dept-card p-6 text-center block no-underline">
+                <div class="dept-icon bg-purple-100 mx-auto mb-4">📊</div>
+                <h3 class="font-bold text-gray-800 text-sm">Management</h3>
+                <p class="text-xs text-gray-500 mt-1">Strategy, IT, Corporate</p>
+            </a>
+            <!-- Logistics -->
+            <a href="{{ url_for('employee_dashboard') }}?dept=Logistics" class="dept-card p-6 text-center block no-underline">
+                <div class="dept-icon bg-green-100 mx-auto mb-4">🚛</div>
+                <h3 class="font-bold text-gray-800 text-sm">Logistics</h3>
+                <p class="text-xs text-gray-500 mt-1">Supply Chain, Transport</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ LATEST RULES ══════════════════════════ -->
+<section id="rules" class="py-14 px-4 bg-white">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <p class="text-sail-blue font-semibold text-sm tracking-wider uppercase">Recently Added</p>
+                <h2 class="section-title text-3xl mt-1">Latest HR Rules & Policies</h2>
+            </div>
+            <a href="{{ url_for('employee_dashboard') }}" class="hidden sm:inline-flex items-center gap-2 text-sail-blue font-bold text-sm hover:underline">
+                View All Rules →
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for rule in latest_rules %}
+            <div class="rule-card flex flex-col">
+                <div class="rule-card-header"></div>
+                <div class="p-6 flex-1 flex flex-col">
+                    <!-- Badges -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="dept-badge">{{ rule.department }}</span>
+                        <span class="cat-badge">{{ rule.category }}</span>
+                        <span class="year-badge ml-auto">{{ rule.year }}</span>
+                    </div>
+                    <!-- Title -->
+                    <h3 class="font-bold text-gray-900 text-base leading-tight mb-2 line-clamp-2">{{ rule.title }}</h3>
+                    <!-- Description -->
+                    <p class="text-gray-600 text-sm leading-relaxed line-clamp-3 flex-1">{{ rule.description_text }}</p>
+                    <!-- AI Summary -->
+                    {% if rule.summary %}
+                    <div class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <p class="text-xs text-blue-700 leading-relaxed">
+                            <span class="font-bold text-sail-blue">✦ AI Summary:</span> {{ rule.summary|truncate(160) }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Footer -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                    <span class="text-xs text-gray-400 font-medium">
+                        Updated: {{ rule.updated_at | ddmmyyyy }}
+                    </span>
+                    {% if rule.file_path %}
+                    <a href="{{ url_for('download', rule_id=rule.id) }}" target="_blank"
+                       class="inline-flex items-center gap-1.5 text-sm font-bold text-sail-blue hover:text-sail-mid transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Download
+                    </a>
+                    {% else %}
+                    <span class="text-xs text-gray-400 italic">Text Only</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-3 text-center py-16 text-gray-400">
+                <div class="text-5xl mb-4">📂</div>
+                <p class="font-medium">No rules published yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="{{ url_for('employee_dashboard') }}" class="btn-primary inline-flex items-center gap-2 px-8 py-3">
+                📋 View All HR Rules →
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ ANNOUNCEMENTS ═════════════════════════ -->
+{% if announcements %}
+<section class="py-14 px-4 bg-sail-bg">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="text-center mb-8">
+            <p class="text-sail-blue font-semibold text-sm tracking-wider uppercase">Notices & Updates</p>
+            <h2 class="section-title text-3xl mt-1">Official Announcements</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for ann in announcements %}
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="w-10 h-10 bg-sail-accent/10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📢</div>
+                    <h3 class="font-bold text-gray-900 text-sm leading-tight">{{ ann.title }}</h3>
+                </div>
+                <p class="text-gray-600 text-sm leading-relaxed">{{ ann.content }}</p>
+                <p class="text-xs text-gray-400 mt-3 font-medium">{{ ann.created_at | ddmmyyyy }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══════════════════════════ ACCESS PORTALS ════════════════════════════ -->
+<section class="py-14 px-4" style="background: linear-gradient(135deg, #0f3a63 0%, #1a5276 100%);">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black text-white" style="font-family:'Rajdhani',sans-serif;">Access Your Portal</h2>
+            <p class="text-blue-200 text-sm mt-2">Select your role to log in and access HR rules</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <!-- Employee -->
+            <a href="{{ url_for('login') }}" class="bg-white/10 border border-white/20 rounded-2xl p-8 text-center hover:bg-white/20 transition group block no-underline">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">👤</div>
+                <h3 class="text-white font-bold text-xl mb-2">Employee Access</h3>
+                <p class="text-blue-200 text-sm mb-4">Search, filter, and view all HR rules. Download documents.</p>
+                <span class="inline-block bg-white/20 text-white text-sm font-bold px-5 py-2 rounded-xl border border-white/30 group-hover:bg-white/30 transition">
+                    Employee Login →
+                </span>
+            </a>
+            <!-- Admin -->
+            <a href="{{ url_for('login') }}?tab=admin" class="bg-sail-accent/20 border border-sail-accent/30 rounded-2xl p-8 text-center hover:bg-sail-accent/30 transition group block no-underline">
+                <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">🔐</div>
+                <h3 class="text-white font-bold text-xl mb-2">Admin Access</h3>
+                <p class="text-blue-200 text-sm mb-4">Upload, manage rules, OCR scanning, and analytics.</p>
+                <span class="inline-block bg-sail-accent text-white text-sm font-bold px-5 py-2 rounded-xl shadow group-hover:opacity-90 transition">
+                    Admin Login →
+                </span>
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Hero search bar — sends to employee dashboard with query param
+const heroSearch = document.getElementById('heroSearch');
+if (heroSearch) {
+    heroSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value.trim()) {
+            window.location.href = "{{ url_for('employee_dashboard') }}?q=" + encodeURIComponent(this.value.trim());
+        }
+    });
+    // Suggestion dropdown
+    heroSearch.addEventListener('input', async function() {
+        const q = this.value.trim();
+        if (q.length < 2) { document.getElementById('searchSuggestions').classList.add('hidden'); return; }
+        try {
+            const resp = await fetch('/api/search?q=' + encodeURIComponent(q));
+            const data = await resp.json();
+            const box = document.getElementById('searchSuggestions');
+            const inner = box.querySelector('.search-suggestions');
+            if (data.suggestions && data.suggestions.length > 0) {
+                inner.innerHTML = data.suggestions.map(s =>
+                    `<div class="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0" 
+                          onclick="window.location.href='{{ url_for('employee_dashboard') }}?q='+encodeURIComponent('${s}')">${s}</div>`
+                ).join('');
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        } catch(e) {}
+    });
+    document.addEventListener('click', (e) => {
+        if (!heroSearch.contains(e.target)) {
+            document.getElementById('searchSuggestions').classList.add('hidden');
+        }
+    });
+}
+</script>
+{% endblock %}

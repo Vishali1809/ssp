@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    /* Security Restraint: Strictly disable text highlighting and selection */
+    body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Custom range slider styling */
+    input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: #2563eb;
+        cursor: pointer;
+        margin-top: -8px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        cursor: pointer;
+        background: #d1d5db;
+        border-radius: 2px;
+    }
+    input[type=range]:focus {
+        outline: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Corporate Rules Library</h1>
+    <p class="text-gray-600 mt-1">Department: <span class="font-semibold text-blue-700">{{ session.get('department') }}</span></p>
+</div>
+
+<!-- Premium UI Controls -->
+<div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-8 space-y-6 relative overflow-hidden">
+    <!-- Decorative top gradient -->
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+    <!-- Keyword Search Bar -->
+    <div>
+        <label for="searchInput" class="block text-sm font-bold text-gray-700 mb-2">Search Regulations</label>
+        <div class="relative rounded-md shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" id="searchInput" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-lg border-gray-300 rounded-lg py-3 px-4 bg-gray-50 border transition-colors" placeholder="Type keywords to filter instantly...">
+        </div>
+    </div>
+
+    <!-- Interactive Horizontal Visual Timeline Slider -->
+    <div>
+        <div class="flex justify-between items-center mb-2">
+            <label for="yearSlider" class="block text-sm font-bold text-gray-700">Timeline Filter (Active Year: <span id="yearDisplay" class="text-blue-600 font-black text-lg">All</span>)</label>
+            <button id="resetTimelineBtn" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold px-2 py-1 rounded bg-indigo-50 border border-indigo-200 transition">Show All Years</button>
+        </div>
+        <div class="px-2">
+            <input type="range" id="yearSlider" min="1969" max="2026" value="1969" class="w-full">
+            <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                <span>1970</span>
+                <span>1980</span>
+                <span>1990</span>
+                <span>2000</span>
+                <span>2010</span>
+                <span>2020</span>
+                <span>2026</span>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2 italic">* Slide to a specific year to view rules issued in that year. Set to far left (1969) to view all years.</p>
+    </div>
+</div>
+
+<!-- Rule Cards Container -->
+<div id="rulesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for rule in rules %}
+    <div class="rule-card bg-white rounded-xl shadow border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col" 
+         data-title="{{ rule.title | lower }}" 
+         data-desc="{{ rule.description | lower }}" 
+         data-year="{{ rule.year }}">
+        <div class="p-6 flex-grow">
+            <div class="flex justify-between items-start mb-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    {{ rule.category }}
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-300 shadow-sm">
+                    {{ rule.year }}
+                </span>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 leading-tight rule-title">{{ rule.title }}</h3>
+            <p class="text-sm text-gray-600 line-clamp-4 rule-desc">{{ rule.description }}</p>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+            <span class="text-xs text-gray-400 font-medium">Doc ID: #{{ rule.id }}</span>
+            {% if rule.file_path %}
+            <a href="{{ url_for('download', rule_id=rule.id) }}" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
+                <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                View PDF
+            </a>
+            {% else %}
+            <span class="text-sm text-gray-400 italic">Text Only</span>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-full bg-white p-10 rounded-xl shadow text-center border border-gray-200">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No Rules Found</h3>
+        <p class="mt-1 text-sm text-gray-500">There are no corporate rules registered for the {{ session.get('department') }} department yet.</p>
+    </div>
+    {% endfor %}
+    
+    <!-- Empty State for JS Filtering -->
+    <div id="noResultsMsg" class="hidden col-span-full bg-white p-10 rounded-xl shadow text-center border border-gray-200">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No Matching Rules</h3>
+        <p class="mt-1 text-sm text-gray-500">No rules match your current search and timeline filters. Try adjusting them.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Security Restraints Enforcement ---
+        
+        // 1. Disable Right-Click (Context Menu)
+        document.addEventListener('contextmenu', event => {
+            event.preventDefault();
+        });
+
+        // 2. Disable Keyboard Shortcuts for Copying (Ctrl+C, Cmd+C, etc)
+        document.addEventListener('keydown', event => {
+            // Check for Ctrl/Cmd + C, X, A, P, S
+            if ((event.ctrlKey || event.metaKey) && 
+                (event.key === 'c' || event.key === 'C' || 
+                 event.key === 'x' || event.key === 'X' || 
+                 event.key === 'a' || event.key === 'A' ||
+                 event.key === 'p' || event.key === 'P' ||
+                 event.key === 's' || event.key === 'S')) {
+                event.preventDefault();
+            }
+        });
+
+        // --- Client-Side Filtering Logic ---
+        
+        const searchInput = document.getElementById('searchInput');
+        const yearSlider = document.getElementById('yearSlider');
+        const yearDisplay = document.getElementById('yearDisplay');
+        const resetTimelineBtn = document.getElementById('resetTimelineBtn');
+        const rulesCards = document.querySelectorAll('.rule-card');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+
+        function filterRules() {
+            const query = searchInput.value.toLowerCase().trim();
+            const selectedYear = parseInt(yearSlider.value, 10);
+            let visibleCount = 0;
+
+            rulesCards.forEach(card => {
+                const title = card.getAttribute('data-title');
+                const desc = card.getAttribute('data-desc');
+                const year = parseInt(card.getAttribute('data-year'), 10);
+
+                // Check text match
+                const matchesText = query === '' || title.includes(query) || desc.includes(query);
+                
+                // Check year match (1969 means 'All')
+                const matchesYear = selectedYear === 1969 || year === selectedYear;
+
+                if (matchesText && matchesYear) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Handle empty state visibility
+            if (visibleCount === 0 && rulesCards.length > 0) {
+                noResultsMsg.classList.remove('hidden');
+            } else {
+                noResultsMsg.classList.add('hidden');
+            }
+        }
+
+        // Event Listeners for Filters
+        searchInput.addEventListener('input', filterRules);
+        
+        yearSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (val === 1969) {
+                yearDisplay.textContent = 'All';
+            } else {
+                yearDisplay.textContent = val;
+            }
+            filterRules();
+        });
+
+        resetTimelineBtn.addEventListener('click', () => {
+            yearSlider.value = 1969;
+            yearDisplay.textContent = 'All';
+            filterRules();
+        });
+    });
+</script>
+{% endblock %}

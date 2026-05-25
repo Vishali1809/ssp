@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Database (do NOT commit real data)
+database.db
+
+# Uploaded documents
+uploads/*
+!uploads/.gitkeep
+
+# Environment variables (keep API keys safe)
+.env
+*.env
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Flask session files
+flask_session/
+
+# Logs
+*.log

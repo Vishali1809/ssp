@@ -1,0 +1,7 @@
+Flask>=2.0.0
+werkzeug>=2.0.0
+PyPDF2>=3.0.0
+requests>=2.25.0
+pytesseract>=0.3.10
+Pillow>=9.0.0
+python-docx>=0.8.11

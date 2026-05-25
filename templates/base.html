@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Salem Steel Plant HR Rules Management System — SAIL. Access HR policies, circulars, compliance guidelines and corporate rules.">
+    <title>{% block title %}HR Rules Portal{% endblock %} — SAIL Salem Steel Plant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sail-blue':  '#0f3a63',
+                        'sail-mid':   '#1a5276',
+                        'sail-light': '#2e86c1',
+                        'sail-accent':'#c9a227',
+                        'sail-bg':    '#f0f4f8',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- Identity Bar -->
+<div class="sail-identity-bar"></div>
+
+<!-- Navigation -->
+<nav class="main-nav">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+
+            <!-- Brand -->
+            <a href="{{ url_for('index') }}" class="flex items-center gap-4 no-underline">
+                <div class="bg-white rounded-xl p-2 shadow-lg flex items-center justify-center" style="width:48px;height:48px;">
+                    <!-- SAIL Steel Gear Icon -->
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8">
+                        <circle cx="20" cy="20" r="18" fill="#0f3a63"/>
+                        <path d="M20 8 L23 14 L29 11 L27 17 L33 20 L27 23 L29 29 L23 26 L20 32 L17 26 L11 29 L13 23 L7 20 L13 17 L11 11 L17 14 Z" fill="#c9a227"/>
+                        <circle cx="20" cy="20" r="5" fill="white"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="nav-brand-name text-white">SAIL</div>
+                    <div class="text-xs text-blue-200 tracking-widest uppercase font-medium">Salem Steel Plant</div>
+                </div>
+            </a>
+
+            <!-- Nav Right -->
+            <div class="flex items-center gap-3">
+                {% if session.get('role') == 'admin' %}
+                    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+                        <div class="w-8 h-8 bg-sail-accent rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {{ (session.get('username', 'A'))[0]|upper }}
+                        </div>
+                        <div>
+                            <div class="text-white text-sm font-semibold leading-tight">{{ session.get('full_name') or session.get('username') }}</div>
+                            <div class="text-blue-200 text-xs">Administrator</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="px-4 py-2 bg-sail-accent text-white rounded-lg text-sm font-bold shadow transition hover:opacity-90">
+                        ⚙ Dashboard
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="px-3 py-2 text-red-300 hover:text-white text-sm font-medium transition">Logout</a>
+
+                {% elif session.get('role') == 'employee' %}
+                    <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {{ (session.get('username', 'E'))[0]|upper }}
+                        </div>
+                        <div>
+                            <div class="text-white text-sm font-semibold leading-tight">{{ session.get('full_name') or session.get('username') }}</div>
+                            <div class="text-blue-200 text-xs">{{ session.get('department') }} Dept.</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('employee_dashboard') }}" class="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-lg text-sm font-bold transition border border-white/20">
+                        📋 My Portal
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="px-3 py-2 text-red-300 hover:text-white text-sm font-medium transition">Logout</a>
+
+                {% else %}
+                    <a href="{{ url_for('login') }}?tab=employee" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold border border-white/20 transition">
+                        👤 Employee Login
+                    </a>
+                    <a href="{{ url_for('login') }}?tab=admin" class="px-4 py-2 bg-sail-accent hover:opacity-90 text-white rounded-lg text-sm font-bold shadow transition">
+                        🔐 Admin Access
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</nav>
+
+<!-- Flash Messages -->
+<div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="flash-container" class="space-y-2">
+        {% for category, message in messages %}
+            {% if category == 'success' %}
+                <div class="flash-msg flash-success">✅ {{ message }}</div>
+            {% elif category == 'danger' or category == 'error' %}
+                <div class="flash-msg flash-danger">❌ {{ message }}</div>
+            {% elif category == 'warning' %}
+                <div class="flash-msg flash-warning">⚠️ {{ message }}</div>
+            {% else %}
+                <div class="flash-msg flash-info">ℹ️ {{ message }}</div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+</div>
+
+<!-- Main Content -->
+{% block content %}{% endblock %}
+
+<!-- Footer -->
+<footer class="main-footer mt-auto">
+    <div class="max-w-screen-2xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 pb-4 border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 rounded-lg p-2">
+                    <svg viewBox="0 0 40 40" fill="none" class="w-6 h-6">
+                        <circle cx="20" cy="20" r="18" fill="#0f3a63"/>
+                        <path d="M20 8 L23 14 L29 11 L27 17 L33 20 L27 23 L29 29 L23 26 L20 32 L17 26 L11 29 L13 23 L7 20 L13 17 L11 11 L17 14 Z" fill="#c9a227"/>
+                        <circle cx="20" cy="20" r="5" fill="white"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-white font-bold text-sm">Steel Authority of India Limited</div>
+                    <div class="text-blue-300 text-xs">Salem Steel Plant — HR Rules Management Portal</div>
+                </div>
+            </div>
+            <div class="flex gap-6 text-xs text-blue-300">
+                <span>📍 Salem, Tamil Nadu — 636 013</span>
+                <span>📞 0427 — 2477 100</span>
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-row justify-between items-center pt-4 text-xs text-blue-400">
+            <span>© 2026 Steel Authority of India Limited (SAIL). All Rights Reserved.</span>
+            <span class="mt-1 md:mt-0">Internal HR Portal — Authorized Users Only | Version 2.0</span>
+        </div>
+    </div>
+</footer>
+
+<!-- Floating AI Chat Button -->
+<button id="assistantBtn" title="HR AI Assistant" aria-label="Open AI Chat">
+    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    </svg>
+</button>
+
+<!-- Floating Chat Panel -->
+<div id="chatPanel">
+    <div class="chat-header">
+        <div class="flex justify-between items-center">
+            <div>
+                <div class="font-bold text-base flex items-center gap-2">
+                    <span class="text-sail-accent">✦</span> HR AI Assistant
+                </div>
+                <div class="text-blue-200 text-xs mt-0.5">Powered by Google Gemini · Salem Steel Plant</div>
+            </div>
+            <button id="closeChatBtn" class="text-white/60 hover:text-white transition text-xl font-light">✕</button>
+        </div>
+    </div>
+
+    <div id="chatHistory">
+        <div class="chat-bubble-ai">
+            👋 Hello! I'm your HR Assistant for Salem Steel Plant.<br><br>
+            You can ask me about:<br>
+            • Leave & attendance policies<br>
+            • Safety rules & PPE requirements<br>
+            • Medical benefits & healthcare<br>
+            • Performance appraisal process
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <button id="chatMicBtn" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition flex-shrink-0" title="Voice Input">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+            </svg>
+        </button>
+        <input type="text" id="chatInput" placeholder="Ask about HR policies..." 
+               class="flex-1 text-sm border-none outline-none bg-transparent text-gray-700 placeholder-gray-400">
+        <button id="sendChatBtn" class="btn-primary text-xs px-3 py-2 flex-shrink-0">Send</button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+
+<script>
+// Auto-dismiss flash messages after 5s
+setTimeout(() => {
+    const fc = document.getElementById('flash-container');
+    if (fc) { fc.style.transition='opacity 0.5s'; fc.style.opacity='0'; setTimeout(()=>fc.remove(), 500); }
+}, 5000);
+</script>
+</body>
+</html>
