@@ -40,7 +40,7 @@ app.secret_key = 'ssp_hr_portal_ultra_secure_secret_2026_salem_steel'
 DATABASE      = 'database.db'
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt', 'png', 'jpg', 'jpeg'}
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyA3bvJrFRAREFhWwjvSLsEGPC5R30QCbJg')
 GEMINI_URL     = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
