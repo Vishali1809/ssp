@@ -41,7 +41,7 @@ DATABASE      = 'database.db'
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt', 'png', 'jpg', 'jpeg'}
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyA3bvJrFRAREFhWwjvSLsEGPC5R30QCbJg')
-GEMINI_URL     = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+GEMINI_URL     = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB
@@ -154,8 +154,10 @@ def call_gemini(prompt):
         if resp.status_code == 200:
             data = resp.json()
             return data['candidates'][0]['content']['parts'][0]['text']
+        else:
+            print(f"Gemini API failure: status_code={resp.status_code}, response={resp.text}", flush=True)
     except Exception as e:
-        print(f"Gemini API error: {e}")
+        print(f"Gemini API exception error: {e}", flush=True)
     return None
 
 def generate_summary(text):
