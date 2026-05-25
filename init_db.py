@@ -183,8 +183,7 @@ def init_db():
     conn.close()
     print("\n[OK] Database initialized and seeded successfully.")
     print("   Admin login:    ssp_admin / admin123")
-    print("   Employee login: employee1 / emp123")
-    print("   Employee login: safety_worker / user123")
+    print("   Admin login:    hr_admin / admin123")
 
 if __name__ == '__main__':
     init_db()
