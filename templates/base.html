@@ -83,11 +83,11 @@
                     <a href="{{ url_for('logout') }}" class="px-3 py-2 text-red-300 hover:text-white text-sm font-medium transition">Logout</a>
 
                 {% else %}
-                    <a href="{{ url_for('login') }}?tab=employee" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold border border-white/20 transition">
-                        👤 Employee Login
+                    <a href="{{ url_for('employee_dashboard') }}" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold border border-white/20 transition">
+                        📋 Employee Portal
                     </a>
-                    <a href="{{ url_for('login') }}?tab=admin" class="px-4 py-2 bg-sail-accent hover:opacity-90 text-white rounded-lg text-sm font-bold shadow transition">
-                        🔐 Admin Access
+                    <a href="{{ url_for('login') }}" class="px-4 py-2 bg-sail-accent hover:opacity-90 text-white rounded-lg text-sm font-bold shadow transition">
+                        🔐 Admin Login
                     </a>
                 {% endif %}
             </div>

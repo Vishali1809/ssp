@@ -232,18 +232,14 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-        login_type = request.form.get('login_type', 'employee')  # 'admin' or 'employee'
 
         db = get_db()
         user = db.execute("SELECT * FROM Users WHERE username=?", (username,)).fetchone()
 
         if user and check_password_hash(user['password'], password):
-            if login_type == 'admin' and user['role'] != 'admin':
-                flash('This account does not have administrator privileges.', 'danger')
-                return render_template('login.html', active_tab='admin')
-            if login_type == 'employee' and user['role'] not in ('employee', 'admin'):
-                flash('Invalid credentials.', 'danger')
-                return render_template('login.html', active_tab='employee')
+            if user['role'] != 'admin':
+                flash('Access denied. This portal is for administrators only.', 'danger')
+                return render_template('login.html')
 
             session['user_id']    = user['id']
             session['username']   = user['username']
@@ -251,19 +247,14 @@ def login():
             session['role']       = user['role']
             session['department'] = user['department']
 
-            log_activity('LOGIN', f"User {username} logged in as {user['role']}", username)
-
-            if user['role'] == 'admin':
-                flash(f"Welcome back, {user['full_name'] or username}!", 'success')
-                return redirect(url_for('admin_dashboard'))
-            else:
-                flash(f"Welcome, {user['full_name'] or username}!", 'success')
-                return redirect(url_for('employee_dashboard'))
+            log_activity('LOGIN', f"Admin {username} logged in", username)
+            flash(f"Welcome back, {user['full_name'] or username}!", 'success')
+            return redirect(url_for('admin_dashboard'))
         else:
             flash('Invalid username or password. Please try again.', 'danger')
-            return render_template('login.html', active_tab=login_type)
+            return render_template('login.html')
 
-    return render_template('login.html', active_tab='employee')
+    return render_template('login.html')
 
 
 @app.route('/logout')
@@ -358,7 +349,6 @@ def download(rule_id):
 # ════════════════════════════════════════════════════════════════════════════
 
 @app.route('/employee/dashboard')
-@login_required
 def employee_dashboard():
     db = get_db()
     dept_filter = request.args.get('dept', '')

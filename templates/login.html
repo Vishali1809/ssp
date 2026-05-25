@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Admin Login — SAIL HR Portal{% endblock %}
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-4 py-12" style="background: linear-gradient(135deg, #0a2540 0%, #0f3a63 50%, #1a5276 100%);">
 
-    <!-- Background pattern -->
+    <!-- Background grid pattern -->
     <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 40px 40px;"></div>
 
     <div class="relative w-full max-w-md">
 
-        <!-- Header -->
+        <!-- SAIL Header -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-2xl mb-4">
                 <svg viewBox="0 0 40 40" fill="none" class="w-12 h-12">
@@ -22,92 +22,66 @@
             <p class="text-blue-200 text-sm mt-1">HR Rules Management Portal</p>
         </div>
 
-        <!-- Login Card -->
+        <!-- Admin Login Card -->
         <div class="login-card">
 
-            <!-- Tabs -->
-            <div class="flex border-b border-gray-100">
-                <button id="tabEmployee" class="login-tab flex-1 active" onclick="switchTab('employee')">
-                    👤 Employee Login
-                </button>
-                <button id="tabAdmin" class="login-tab flex-1" onclick="switchTab('admin')">
-                    🔐 Admin Login
-                </button>
-            </div>
-
-            <!-- Employee Form -->
-            <div id="formEmployee" class="p-8">
-                <div class="mb-6">
-                    <h2 class="text-xl font-bold text-gray-900">Employee Portal</h2>
-                    <p class="text-gray-500 text-sm mt-1">Login to browse HR rules & policies</p>
-                </div>
-                <form method="POST" action="{{ url_for('login') }}" class="space-y-5">
-                    <input type="hidden" name="login_type" value="employee">
-                    <div>
-                        <label class="form-label">Employee Username</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">👤</span>
-                            <input type="text" name="username" required
-                                   class="form-input pl-9"
-                                   placeholder="Enter your username">
-                        </div>
+            <!-- Card Header -->
+            <div class="px-8 pt-8 pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg"
+                         style="background: linear-gradient(135deg, #c9a227, #e8a820);">
+                        🛡️
                     </div>
                     <div>
-                        <label class="form-label">Password</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
-                            <input type="password" name="password" required
-                                   class="form-input pl-9"
-                                   placeholder="Enter your password">
-                        </div>
+                        <h2 class="text-xl font-bold text-gray-900">Administrator Login</h2>
+                        <p class="text-gray-500 text-xs mt-0.5">Restricted access — authorized personnel only</p>
                     </div>
-                    <button type="submit" class="btn-primary w-full py-3 text-base mt-2">
-                        Login to Employee Portal →
-                    </button>
-                </form>
-
-                <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <p class="text-xs text-blue-700 font-semibold mb-1">Demo Credentials:</p>
-                    <p class="text-xs text-blue-600">👤 <code class="bg-white px-1 rounded">employee1</code> / <code class="bg-white px-1 rounded">emp123</code></p>
-                    <p class="text-xs text-blue-600 mt-0.5">👤 <code class="bg-white px-1 rounded">safety_worker</code> / <code class="bg-white px-1 rounded">user123</code></p>
                 </div>
             </div>
 
             <!-- Admin Form -->
-            <div id="formAdmin" class="p-8 hidden">
-                <div class="mb-6">
-                    <h2 class="text-xl font-bold text-gray-900">Administrator Panel</h2>
-                    <p class="text-gray-500 text-sm mt-1">Restricted access — authorized personnel only</p>
-                </div>
+            <div class="p-8">
                 <form method="POST" action="{{ url_for('login') }}" class="space-y-5">
                     <input type="hidden" name="login_type" value="admin">
+
                     <div>
                         <label class="form-label">Admin Username</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🛡️</span>
-                            <input type="text" name="username" required
+                            <input type="text" name="username" id="adminUsername" required
                                    class="form-input pl-9"
-                                   placeholder="Admin username">
+                                   placeholder="Enter admin username"
+                                   autocomplete="username">
                         </div>
                     </div>
+
                     <div>
                         <label class="form-label">Password</label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔐</span>
-                            <input type="password" name="password" required
+                            <input type="password" name="password" id="adminPassword" required
                                    class="form-input pl-9"
-                                   placeholder="Admin password">
+                                   placeholder="Enter admin password"
+                                   autocomplete="current-password">
+                            <button type="button" id="togglePassword"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-sm transition">
+                                Show
+                            </button>
                         </div>
                     </div>
-                    <button type="submit" class="w-full py-3 text-base font-bold text-white rounded-xl transition"
-                            style="background: linear-gradient(135deg, #c9a227, #e8a820); box-shadow: 0 4px 12px rgba(201,162,39,0.4);">
+
+                    <button type="submit" id="loginBtn"
+                            class="w-full py-3 text-base font-bold text-white rounded-xl transition-all duration-200"
+                            style="background: linear-gradient(135deg, #c9a227, #e8a820); box-shadow: 0 4px 16px rgba(201,162,39,0.4);">
                         Access Admin Dashboard →
                     </button>
                 </form>
 
+                <!-- Demo credentials hint -->
                 <div class="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                    <p class="text-xs text-yellow-700 font-semibold mb-1">Demo Admin Credentials:</p>
+                    <p class="text-xs text-yellow-700 font-semibold mb-1">Demo Credentials</p>
                     <p class="text-xs text-yellow-600">🛡️ <code class="bg-white px-1 rounded">ssp_admin</code> / <code class="bg-white px-1 rounded">admin123</code></p>
+                    <p class="text-xs text-yellow-600 mt-0.5">🛡️ <code class="bg-white px-1 rounded">hr_admin</code> / <code class="bg-white px-1 rounded">admin123</code></p>
                 </div>
             </div>
 
@@ -126,28 +100,26 @@
 
 {% block extra_scripts %}
 <script>
-const activeTab = "{{ active_tab or 'employee' }}";
-// Check URL param
-const urlTab = new URLSearchParams(window.location.search).get('tab');
-if (urlTab === 'admin' || activeTab === 'admin') switchTab('admin');
-
-function switchTab(tab) {
-    const empForm  = document.getElementById('formEmployee');
-    const admForm  = document.getElementById('formAdmin');
-    const empTab   = document.getElementById('tabEmployee');
-    const admTab   = document.getElementById('tabAdmin');
-
-    if (tab === 'employee') {
-        empForm.classList.remove('hidden');
-        admForm.classList.add('hidden');
-        empTab.classList.add('active');
-        admTab.classList.remove('active');
-    } else {
-        admForm.classList.remove('hidden');
-        empForm.classList.add('hidden');
-        admTab.classList.add('active');
-        empTab.classList.remove('active');
+    // Show/hide password toggle
+    const toggleBtn = document.getElementById('togglePassword');
+    const pwField   = document.getElementById('adminPassword');
+    if (toggleBtn && pwField) {
+        toggleBtn.addEventListener('click', () => {
+            const isText = pwField.type === 'text';
+            pwField.type = isText ? 'password' : 'text';
+            toggleBtn.textContent = isText ? 'Show' : 'Hide';
+        });
     }
-}
+
+    // Animate button on submit
+    const form     = document.querySelector('form');
+    const loginBtn = document.getElementById('loginBtn');
+    if (form && loginBtn) {
+        form.addEventListener('submit', () => {
+            loginBtn.textContent = 'Authenticating…';
+            loginBtn.disabled = true;
+            loginBtn.style.opacity = '0.75';
+        });
+    }
 </script>
 {% endblock %}

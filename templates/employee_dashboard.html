@@ -13,13 +13,23 @@
                     HR Rules & Policies Library
                 </h1>
             </div>
+            {% if session.get('user_id') %}
             <div class="flex items-center gap-3">
                 <div class="bg-white/10 rounded-xl px-4 py-2 border border-white/20">
                     <p class="text-blue-200 text-xs">Logged in as</p>
                     <p class="text-white font-bold text-sm">{{ session.get('full_name') or session.get('username') }}</p>
-                    <p class="text-blue-300 text-xs">{{ session.get('department') }} Department</p>
+                    <p class="text-blue-300 text-xs">Admin / {{ session.get('department') }} Dept.</p>
                 </div>
             </div>
+            {% else %}
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 rounded-xl px-4 py-2 border border-white/20">
+                    <p class="text-blue-200 text-xs">Access Mode</p>
+                    <p class="text-white font-bold text-sm">General Public</p>
+                    <p class="text-blue-300 text-xs">Read-Only Library</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -223,12 +233,12 @@
 
     <!-- Notice Box -->
     <div class="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-        <span class="text-xl flex-shrink-0">🔒</span>
+        <span class="text-xl flex-shrink-0">🔓</span>
         <div>
-            <p class="text-amber-800 font-bold text-sm">Read-Only Access</p>
+            <p class="text-amber-800 font-bold text-sm">Public Read-Only Access</p>
             <p class="text-amber-700 text-xs mt-1">
-                You are logged in as an employee. You can search, filter, and download HR documents.
-                To make changes, contact the HR Administrator.
+                You have direct read-only access to all HR rules. You can search, filter, and download HR documents.
+                To request any updates or changes, please contact the HR Administrator.
             </p>
         </div>
     </div>

@@ -32,15 +32,11 @@
                 <!-- CTA Buttons -->
                 <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
                     {% if not session.get('user_id') %}
-                    <a href="{{ url_for('login') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
-                        👤 Employee Login
-                    </a>
-                    <a href="{{ url_for('login') }}?tab=admin" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
-                        🔐 Admin Access
-                    </a>
-                    {% elif session.get('role') == 'employee' %}
                     <a href="{{ url_for('employee_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
-                        📋 Go to My Portal →
+                        📋 Employee Portal
+                    </a>
+                    <a href="{{ url_for('login') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
+                        🔐 Admin Login
                     </a>
                     {% else %}
                     <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
@@ -310,18 +306,18 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <!-- Employee -->
-            <a href="{{ url_for('login') }}" class="bg-white/10 border border-white/20 rounded-2xl p-8 text-center hover:bg-white/20 transition group block no-underline">
+            <a href="{{ url_for('employee_dashboard') }}" class="bg-white/10 border border-white/20 rounded-2xl p-8 text-center hover:bg-white/20 transition group block no-underline">
                 <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">👤</div>
-                <h3 class="text-white font-bold text-xl mb-2">Employee Access</h3>
+                <h3 class="text-white font-bold text-xl mb-2">Employee Portal</h3>
                 <p class="text-blue-200 text-sm mb-4">Search, filter, and view all HR rules. Download documents.</p>
                 <span class="inline-block bg-white/20 text-white text-sm font-bold px-5 py-2 rounded-xl border border-white/30 group-hover:bg-white/30 transition">
-                    Employee Login →
+                    Explore Portal →
                 </span>
             </a>
             <!-- Admin -->
-            <a href="{{ url_for('login') }}?tab=admin" class="bg-sail-accent/20 border border-sail-accent/30 rounded-2xl p-8 text-center hover:bg-sail-accent/30 transition group block no-underline">
+            <a href="{{ url_for('login') }}" class="bg-sail-accent/20 border border-sail-accent/30 rounded-2xl p-8 text-center hover:bg-sail-accent/30 transition group block no-underline">
                 <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">🔐</div>
-                <h3 class="text-white font-bold text-xl mb-2">Admin Access</h3>
+                <h3 class="text-white font-bold text-xl mb-2">Admin Portal</h3>
                 <p class="text-blue-200 text-sm mb-4">Upload, manage rules, OCR scanning, and analytics.</p>
                 <span class="inline-block bg-sail-accent text-white text-sm font-bold px-5 py-2 rounded-xl shadow group-hover:opacity-90 transition">
                     Admin Login →
