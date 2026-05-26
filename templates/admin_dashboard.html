@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="admin-layout">
 
@@ -44,9 +48,7 @@
                 <span class="text-lg">🔍</span> OCR Scanner
             </a>
 
-            <a href="{{ url_for('admin_analytics') }}" class="sidebar-nav-item {% if active_section == 'analytics' %}active{% endif %}">
-                <span class="text-lg">📈</span> Analytics
-            </a>
+
 
             <button onclick="showSection('announcements')"
                     class="sidebar-nav-item {% if active_section == 'announcements' %}active{% endif %}" id="nav-announce">
@@ -127,34 +129,176 @@
                         <div class="admin-stat-icon bg-orange-100">👥</div>
                     </div>
                 </div>
+                <div class="admin-stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider">Total Views</p>
+                            <p class="text-3xl font-black text-gray-900 mt-1">{{ total_views }}</p>
+                            <p class="text-xs text-green-600 mt-1 font-medium">Across all policies</p>
+                        </div>
+                        <div class="admin-stat-icon bg-green-100">👁️</div>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider">With Documents</p>
+                            <p class="text-3xl font-black text-gray-900 mt-1">{{ with_files }}</p>
+                            <p class="text-xs text-purple-600 mt-1 font-medium">Attached files</p>
+                        </div>
+                        <div class="admin-stat-icon bg-purple-100">📎</div>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider">AI Summaries</p>
+                            <p class="text-3xl font-black text-gray-900 mt-1">{{ with_summary }}</p>
+                            <p class="text-xs text-orange-600 mt-1 font-medium">Auto-generated</p>
+                        </div>
+                        <div class="admin-stat-icon bg-orange-100">🤖</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Most Viewed Policies -->
-            <div class="grid grid-cols-1 gap-6">
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Rules by Department -->
+                <div class="chart-card">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="text-lg">🏢</span> Rules by Department
+                    </h3>
+                    <canvas id="deptChart" height="220"></canvas>
+                </div>
+                <!-- Rules by Category -->
+                <div class="chart-card">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="text-lg">🏷️</span> Rules by Category
+                    </h3>
+                    <canvas id="catChart" height="220"></canvas>
+                </div>
+            </div>
 
-                <!-- Top Viewed -->
+            <!-- Year Timeline Chart -->
+            <div class="chart-card mb-8">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="text-lg">📅</span> Rules by Year (Timeline)
+                </h3>
+                <canvas id="yearChart" height="120"></canvas>
+            </div>
+
+            <!-- Two Columns: Most Viewed + Recent Uploads -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Most Viewed -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                         <span class="text-lg">🔥</span>
                         <h3 class="font-bold text-gray-800">Most Viewed Policies</h3>
                     </div>
-                    <div class="divide-y divide-gray-50">
-                        {% for rule in top_viewed %}
-                        <div class="px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-gray-900 truncate">{{ rule.title }}</p>
-                                <p class="text-xs text-gray-500">{{ rule.department }} · {{ rule.year }}</p>
-                            </div>
-                            <span class="ml-3 bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0">
-                                {{ rule.view_count }} views
-                            </span>
-                        </div>
-                        {% else %}
-                        <div class="px-6 py-8 text-center text-gray-400 text-sm">No data yet</div>
-                        {% endfor %}
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Title</th>
+                                    <th>Dept</th>
+                                    <th>Year</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rule in top_viewed %}
+                                <tr>
+                                    <td>
+                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-black
+                                            {% if loop.index == 1 %}bg-yellow-100 text-yellow-700
+                                            {% elif loop.index == 2 %}bg-gray-200 text-gray-700
+                                            {% elif loop.index == 3 %}bg-orange-100 text-orange-700
+                                            {% else %}bg-gray-50 text-gray-500{% endif %}">
+                                            {{ loop.index }}
+                                        </span>
+                                    </td>
+                                    <td class="font-semibold text-gray-900 text-sm max-w-xs truncate">{{ rule.title }}</td>
+                                    <td><span class="dept-badge">{{ rule.department }}</span></td>
+                                    <td><span class="year-badge">{{ rule.year }}</span></td>
+                                    <td><span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded-full">{{ rule.view_count }}</span></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="py-8 text-center text-gray-400">No data yet</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
+                <!-- Recent Uploads -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="text-lg">🆕</span>
+                        <h3 class="font-bold text-gray-800">Recent Uploads</h3>
+                    </div>
+                    <div class="divide-y divide-gray-50">
+                        {% for rule in recent %}
+                        <div class="px-6 py-3 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ rule.title }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="dept-badge">{{ rule.department }}</span>
+                                        <span class="text-xs text-gray-400">{{ rule.created_at | ddmmyyyy }}</span>
+                                    </div>
+                                </div>
+                                {% if rule.file_path %}
+                                <span class="text-xs text-green-600 font-bold flex-shrink-0">📎 Doc</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="py-8 text-center text-gray-400">No recent uploads</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <span class="text-lg">🕐</span>
+                    <h3 class="font-bold text-gray-800">System Activity Log</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for act in activity %}
+                            <tr>
+                                <td class="text-xs text-gray-500 whitespace-nowrap">{{ act.created_at | ddmmyyyy }}</td>
+                                <td>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full
+                                        {% if 'LOGIN' in act.action %}bg-blue-100 text-blue-700
+                                        {% elif 'CREATED' in act.action %}bg-green-100 text-green-700
+                                        {% elif 'DELETED' in act.action %}bg-red-100 text-red-700
+                                        {% elif 'UPDATED' in act.action %}bg-yellow-100 text-yellow-700
+                                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                        {{ act.action }}
+                                    </span>
+                                </td>
+                                <td class="text-sm text-gray-600 max-w-xs truncate">{{ act.details or '—' }}</td>
+                                <td class="text-xs text-gray-500 font-medium">{{ act.username or '—' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="py-8 text-center text-gray-400">No activity recorded</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -362,6 +506,8 @@
                 {% endif %}
             </div>
         </div>
+
+
 
     </main>
 </div>
@@ -578,6 +724,43 @@ if (uploadZone) {
             fileDisplay.textContent = '✅ Selected (' + e.dataTransfer.files.length + '): ' + names;
             fileDisplay.classList.remove('hidden');
         }
+    });
+}
+
+// ── Chart.js Analytics Scripts ─────────────────────────────────────────────
+const SAIL_BLUE   = '#0f3a63';
+const SAIL_MID    = '#1a5276';
+const SAIL_LIGHT  = '#2e86c1';
+const SAIL_ACCENT = '#c9a227';
+const COLORS = ['#0f3a63','#1a5276','#2e86c1','#c9a227','#27ae60','#e74c3c','#8e44ad','#16a085'];
+
+const deptLabels = [{% for r in dept_stats %}'{{ r.department }}'{% if not loop.last %},{% endif %}{% endfor %}];
+const deptCounts = [{% for r in dept_stats %}{{ r.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+if(document.getElementById('deptChart')) {
+    new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: { labels: deptLabels, datasets: [{ label: 'Rules', data: deptCounts, backgroundColor: COLORS.slice(0, deptLabels.length), borderRadius: 8, borderSkipped: false }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+    });
+}
+
+const catLabels = [{% for r in cat_stats %}'{{ r.category }}'{% if not loop.last %},{% endif %}{% endfor %}];
+const catCounts = [{% for r in cat_stats %}{{ r.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+if(document.getElementById('catChart')) {
+    new Chart(document.getElementById('catChart'), {
+        type: 'doughnut',
+        data: { labels: catLabels, datasets: [{ data: catCounts, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 12, boxWidth: 14 } } } }
+    });
+}
+
+const yearLabels = [{% for r in year_stats|reverse %}'{{ r.year }}'{% if not loop.last %},{% endif %}{% endfor %}];
+const yearCounts = [{% for r in year_stats|reverse %}{{ r.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+if(document.getElementById('yearChart')) {
+    new Chart(document.getElementById('yearChart'), {
+        type: 'line',
+        data: { labels: yearLabels, datasets: [{ label: 'Rules Published', data: yearCounts, borderColor: SAIL_BLUE, backgroundColor: 'rgba(15,58,99,0.08)', fill: true, tension: 0.4, pointBackgroundColor: SAIL_ACCENT, pointRadius: 5, pointHoverRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } }, x: { grid: { color: '#f8fafc' } } } }
     });
 }
 </script>
