@@ -1,0 +1,43 @@
+{% for rule in rules %}
+<tr class="admin-rule-row"
+    data-title="{{ rule.title|lower }}"
+    data-dept="{{ rule.department|lower }}"
+    data-cat="{{ rule.category|lower }}">
+    <td class="text-gray-400 font-mono text-xs">#{{ rule.id }}</td>
+    <td>
+        <div class="font-semibold text-gray-900 text-sm max-w-xs">{{ rule.title }}</div>
+        {% if rule.summary %}
+        <div class="text-xs text-gray-400 mt-0.5 line-clamp-1">✦ {{ rule.summary[:80] }}…</div>
+        {% endif %}
+    </td>
+    <td><span class="dept-badge">{{ rule.department }}</span></td>
+    <td><span class="cat-badge">{{ rule.category }}</span></td>
+    <td><span class="year-badge">{{ rule.year }}</span></td>
+    <td class="text-xs text-gray-500">{{ rule.updated_at | ddmmyyyy }}</td>
+    <td>
+        {% if rule.file_path %}
+        <a href="{{ url_for('download', rule_id=rule.id) }}" target="_blank"
+           class="text-sail-blue text-xs font-bold hover:underline">📎 View</a>
+        {% else %}
+        <span class="text-gray-300 text-xs">—</span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="flex items-center gap-2">
+            <button onclick="openEditModal({{ rule.id }}, '{{ rule.title|replace("'","\\'")|replace('"','\\"') }}', '{{ rule.category|replace("'","\\'")|replace('"','\\"') }}', {{ rule.year }}, '{{ rule.department }}', '{{ rule.description_text|replace("'","\\'")|replace('"','\\"')|replace('\n','\\n') }}')"
+                    class="btn-warning text-xs px-3 py-1.5">✏️ Edit</button>
+            <form method="POST" action="{{ url_for('delete_rule', rule_id=rule.id) }}"
+                  onsubmit="return confirm('Permanently delete this rule?')">
+                <button type="submit" class="btn-danger text-xs px-3 py-1.5">🗑️ Delete</button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="8" class="py-12 text-center text-gray-400">
+        <div class="text-4xl mb-3">📂</div>
+        <p class="font-medium">No rules found in the database.</p>
+    </td>
+</tr>
+{% endfor %}

@@ -83,9 +83,6 @@
                     <a href="{{ url_for('logout') }}" class="px-3 py-2 text-red-300 hover:text-white text-sm font-medium transition">Logout</a>
 
                 {% else %}
-                    <a href="{{ url_for('employee_dashboard') }}" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold border border-white/20 transition">
-                        📋 Employee Portal
-                    </a>
                     <a href="{{ url_for('login') }}" class="px-4 py-2 bg-sail-accent hover:opacity-90 text-white rounded-lg text-sm font-bold shadow transition">
                         🔐 Admin Login
                     </a>
@@ -120,34 +117,7 @@
 <!-- Main Content -->
 {% block content %}{% endblock %}
 
-<!-- Footer -->
-<footer class="main-footer mt-auto">
-    <div class="max-w-screen-2xl mx-auto px-6">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 pb-4 border-b border-white/10">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/10 rounded-lg p-2">
-                    <svg viewBox="0 0 40 40" fill="none" class="w-6 h-6">
-                        <circle cx="20" cy="20" r="18" fill="#0f3a63"/>
-                        <path d="M20 8 L23 14 L29 11 L27 17 L33 20 L27 23 L29 29 L23 26 L20 32 L17 26 L11 29 L13 23 L7 20 L13 17 L11 11 L17 14 Z" fill="#c9a227"/>
-                        <circle cx="20" cy="20" r="5" fill="white"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="text-white font-bold text-sm">Steel Authority of India Limited</div>
-                    <div class="text-blue-300 text-xs">Salem Steel Plant — HR Rules Management Portal</div>
-                </div>
-            </div>
-            <div class="flex gap-6 text-xs text-blue-300">
-                <span>📍 Salem, Tamil Nadu — 636 013</span>
-                <span>📞 0427 — 2477 100</span>
-            </div>
-        </div>
-        <div class="flex flex-col md:flex-row justify-between items-center pt-4 text-xs text-blue-400">
-            <span>© 2026 Steel Authority of India Limited (SAIL). All Rights Reserved.</span>
-            <span class="mt-1 md:mt-0">Internal HR Portal — Authorized Users Only | Version 2.0</span>
-        </div>
-    </div>
-</footer>
+<!-- Footer Removed -->
 
 <!-- Floating AI Chat Button -->
 <button id="assistantBtn" title="HR AI Assistant" aria-label="Open AI Chat">

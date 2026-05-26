@@ -746,6 +746,7 @@ input[type=range]:focus { outline: none; }
 
 /* File upload drop zone */
 .upload-zone {
+  position: relative;
   border: 2px dashed #bcd2e8;
   border-radius: 12px;
   padding: 32px;

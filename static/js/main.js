@@ -33,47 +33,112 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Real-time rule card filtering ──────────────────────────────────────
-    function filterRules() {
-        if (!searchInput) return;
-        const query       = searchInput.value.toLowerCase().trim();
-        const selectedYear = yearSlider ? parseInt(yearSlider.value, 10) : 1969;
-        const cards       = document.querySelectorAll('.rule-card-item');
-        let visible       = 0;
+    // ── AJAX Pagination & Filtering ──────────────────────────────────────
+    let currentPage = 1;
+    let currentDept = new URLSearchParams(window.location.search).get('dept') || '';
 
-        cards.forEach(card => {
-            const title = card.dataset.title || '';
-            const desc  = card.dataset.desc  || '';
-            const dept  = card.dataset.dept  || '';
-            const cat   = card.dataset.cat   || '';
-            const year  = parseInt(card.dataset.year, 10);
+    async function fetchPaginatedRules(page = 1) {
+        const rulesContainer = document.getElementById('rulesContainer');
+        const countDisplay = document.getElementById('ruleCountDisplay');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        if (!rulesContainer) return; // Not on the employee dashboard
 
-            const textMatch = !query || title.includes(query) || desc.includes(query)
-                              || dept.includes(query) || cat.includes(query);
-            const yearMatch = selectedYear === 1969 || year === selectedYear;
+        const q = searchInput ? searchInput.value.trim() : '';
+        const year = yearSlider ? yearSlider.value : '1969';
+        const perPage = window.innerWidth < 768 ? 5 : 10;
 
-            if (textMatch && yearMatch) {
-                card.style.display = '';
-                visible++;
-            } else {
-                card.style.display = 'none';
+        rulesContainer.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500 animate-pulse">Loading rules...</div>';
+
+        try {
+            const res = await fetch(`/api/rules/html?q=${encodeURIComponent(q)}&year=${year}&dept=${encodeURIComponent(currentDept)}&page=${page}&per_page=${perPage}`);
+            if (!res.ok) throw new Error('Network error');
+            const data = await res.json();
+            
+            rulesContainer.innerHTML = data.html;
+            currentPage = data.page;
+
+            if (visibleCount) visibleCount.textContent = data.total;
+
+            if (noResultsMsg) {
+                noResultsMsg.classList.toggle('hidden', data.total > 0);
             }
-        });
 
-        if (visibleCount) visibleCount.textContent = visible;
+            if (countDisplay) {
+                if (data.total === 0) {
+                    countDisplay.textContent = 'No rules found';
+                } else {
+                    const start = (currentPage - 1) * perPage + 1;
+                    const end = Math.min(currentPage * perPage, data.total);
+                    countDisplay.textContent = `Showing ${start}–${end} of ${data.total} rules`;
+                }
+            }
 
-        if (noResultsMsg) {
-            noResultsMsg.classList.toggle('hidden', visible > 0 || cards.length === 0);
+            if (paginationContainer) {
+                renderPagination(paginationContainer, data.page, data.total_pages, (newPage) => {
+                    fetchPaginatedRules(newPage);
+                    // Smooth scroll to top of rules
+                    document.getElementById('rulesContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching rules:', err);
+            rulesContainer.innerHTML = '<div class="col-span-3 text-center py-12 text-red-500">Error loading rules. Please try again.</div>';
         }
     }
 
-    if (searchInput) searchInput.addEventListener('input', filterRules);
+    function renderPagination(container, current, total, onPageClick) {
+        container.innerHTML = '';
+        if (total <= 1) return;
+
+        const createBtn = (text, page, disabled, active) => {
+            const btn = document.createElement('button');
+            btn.innerHTML = text;
+            btn.className = `px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                active ? 'bg-sail-blue text-white shadow' :
+                disabled ? 'text-gray-300 cursor-not-allowed' :
+                'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+            }`;
+            if (disabled) btn.disabled = true;
+            else btn.addEventListener('click', () => onPageClick(page));
+            return btn;
+        };
+
+        // Previous
+        container.appendChild(createBtn('← Previous', current - 1, current === 1, false));
+
+        // Pages
+        let startPage = Math.max(1, current - 2);
+        let endPage = Math.min(total, current + 2);
+
+        if (current <= 3) endPage = Math.min(total, 5);
+        if (current >= total - 2) startPage = Math.max(1, total - 4);
+
+        if (startPage > 1) {
+            container.appendChild(createBtn('1', 1, false, false));
+            if (startPage > 2) container.appendChild(createBtn('...', null, true, false));
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            container.appendChild(createBtn(i, i, false, i === current));
+        }
+
+        if (endPage < total) {
+            if (endPage < total - 1) container.appendChild(createBtn('...', null, true, false));
+            container.appendChild(createBtn(total, total, false, false));
+        }
+
+        // Next
+        container.appendChild(createBtn('Next →', current + 1, current === total, false));
+    }
+
+    if (searchInput) searchInput.addEventListener('input', () => fetchPaginatedRules(1));
 
     if (yearSlider) {
         yearSlider.addEventListener('input', e => {
             const val = parseInt(e.target.value, 10);
             if (yearDisplay) yearDisplay.textContent = val === 1969 ? 'All' : val;
-            filterRules();
+            fetchPaginatedRules(1);
         });
     }
 
@@ -81,12 +146,48 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.addEventListener('click', () => {
             if (yearSlider) { yearSlider.value = 1969; }
             if (yearDisplay) yearDisplay.textContent = 'All';
-            filterRules();
+            fetchPaginatedRules(1);
         });
     }
 
-    // Run initial filter (e.g. if URL ?q= was pre-filled)
-    if (searchInput && searchInput.value) filterRules();
+    // Expose a global function to change department from UI without reload
+    window.setDepartmentFilter = function(dept) {
+        currentDept = dept;
+        // Update URL to reflect state
+        const url = new URL(window.location.href);
+        if (dept) url.searchParams.set('dept', dept);
+        else url.searchParams.delete('dept');
+        window.history.pushState({}, '', url);
+
+        // Update active classes on dept buttons
+        document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+            const btnDept = btn.dataset.dept || '';
+            if (btnDept === dept) {
+                btn.classList.add('bg-sail-blue', 'text-white', 'border-sail-blue');
+                btn.classList.remove('text-sail-blue', 'hover:bg-blue-50');
+            } else {
+                btn.classList.remove('bg-sail-blue', 'text-white');
+                btn.classList.add('text-sail-blue', 'border-sail-blue', 'hover:bg-blue-50');
+            }
+        });
+        
+        fetchPaginatedRules(1);
+    };
+
+    // Run initial fetch
+    if (document.getElementById('rulesContainer')) {
+        fetchPaginatedRules(1);
+        // Handle window resize for mobile vs desktop limit change
+        let lastWidth = window.innerWidth;
+        window.addEventListener('resize', () => {
+            const newWidth = window.innerWidth;
+            if ((lastWidth < 768 && newWidth >= 768) || (lastWidth >= 768 && newWidth < 768)) {
+                lastWidth = newWidth;
+                fetchPaginatedRules(1);
+            }
+        });
+    }
+
 
     // ── Voice Search ───────────────────────────────────────────────────────
     if (voiceMicBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -105,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             voiceMicBtn.classList.remove('mic-listening');
             if (searchInput) {
                 searchInput.value = e.results[0][0].transcript;
-                filterRules();
+                fetchPaginatedRules(1);
             }
         };
 
@@ -243,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (d.suggestions && d.suggestions.length > 0) {
                         suggBox.innerHTML = d.suggestions.map(s =>
                             `<div class="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0"
-                                  onclick="document.getElementById('searchInput').value='${s.replace(/'/g,"\\'")}';filterRules();this.parentElement.classList.add('hidden')">${s}</div>`
+                                  onclick="document.getElementById('searchInput').value='${s.replace(/'/g,"\\'")}';fetchPaginatedRules(1);this.parentElement.classList.add('hidden')">${s}</div>`
                         ).join('');
                         suggBox.classList.remove('hidden');
                     } else {
@@ -313,34 +414,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// Make filterRules global for inline calls
-function filterRules() {
-    const searchInput  = document.getElementById('searchInput');
-    const yearSlider   = document.getElementById('yearSlider');
-    const noResultsMsg = document.getElementById('noResultsMsg');
-    const visibleCount = document.getElementById('visibleCount');
-    if (!searchInput) return;
 
-    const query        = searchInput.value.toLowerCase().trim();
-    const selectedYear = yearSlider ? parseInt(yearSlider.value, 10) : 1969;
-    const cards        = document.querySelectorAll('.rule-card-item');
-    let visible        = 0;
-
-    cards.forEach(card => {
-        const title = card.dataset.title || '';
-        const desc  = card.dataset.desc  || '';
-        const dept  = card.dataset.dept  || '';
-        const cat   = card.dataset.cat   || '';
-        const year  = parseInt(card.dataset.year, 10);
-
-        const textMatch = !query || title.includes(query) || desc.includes(query)
-                          || dept.includes(query) || cat.includes(query);
-        const yearMatch = selectedYear === 1969 || year === selectedYear;
-
-        if (textMatch && yearMatch) { card.style.display = ''; visible++; }
-        else card.style.display = 'none';
-    });
-
-    if (visibleCount) visibleCount.textContent = visible;
-    if (noResultsMsg) noResultsMsg.classList.toggle('hidden', visible > 0 || cards.length === 0);
-}

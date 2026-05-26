@@ -291,6 +291,92 @@ def api_search():
     ).fetchall()
     return jsonify({"suggestions": [r['title'] for r in rows]})
 
+
+@app.route('/api/rules/html')
+def api_rules_html():
+    db = get_db()
+    q = request.args.get('q', '').strip().lower()
+    dept = request.args.get('dept', '').strip()
+    year_str = request.args.get('year', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    query = "SELECT * FROM Corporate_Rules WHERE 1=1"
+    params = []
+
+    if q:
+        if q in ['hr', 'it', 'safety', 'production', 'management', 'logistics', 'finance']:
+            query += " AND lower(department) = ?"
+            params.append(q)
+        else:
+            query += " AND (lower(title) LIKE ? OR lower(description_text) LIKE ? OR lower(department) LIKE ? OR lower(category) LIKE ?)"
+            params.extend([f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%'])
+    if dept:
+        query += " AND department = ?"
+        params.append(dept)
+    if year_str and year_str != '1969':
+        try:
+            y = int(year_str)
+            query += " AND year = ?"
+            params.append(y)
+        except ValueError:
+            pass
+
+    # Count total
+    count_query = query.replace("SELECT * FROM Corporate_Rules", "SELECT COUNT(*) FROM Corporate_Rules")
+    total = db.execute(count_query, params).fetchone()[0]
+
+    # Pagination
+    query += " ORDER BY year DESC, created_at DESC LIMIT ? OFFSET ?"
+    params.extend([per_page, (page - 1) * per_page])
+
+    rules = db.execute(query, params).fetchall()
+    
+    html = render_template('_rule_cards.html', rules=rules)
+    return jsonify({
+        "html": html,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    })
+
+@app.route('/api/admin/rules/html')
+@admin_required
+def api_admin_rules_html():
+    db = get_db()
+    q = request.args.get('q', '').strip().lower()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    query = "SELECT * FROM Corporate_Rules WHERE 1=1"
+    params = []
+
+    if q:
+        if q in ['hr', 'it', 'safety', 'production', 'management', 'logistics', 'finance']:
+            query += " AND lower(department) = ?"
+            params.append(q)
+        else:
+            query += " AND (lower(title) LIKE ? OR lower(department) LIKE ? OR lower(category) LIKE ?)"
+            params.extend([f'%{q}%', f'%{q}%', f'%{q}%'])
+
+    count_query = query.replace("SELECT * FROM Corporate_Rules", "SELECT COUNT(*) FROM Corporate_Rules")
+    total = db.execute(count_query, params).fetchone()[0]
+
+    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    params.extend([per_page, (page - 1) * per_page])
+
+    rules = db.execute(query, params).fetchall()
+    
+    html = render_template('_admin_rule_rows.html', rules=rules)
+    return jsonify({
+        "html": html,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    })
+
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     data = request.get_json(silent=True) or {}
@@ -329,6 +415,9 @@ def api_chat():
 
 
 # ── File Download ─────────────────────────────────────────────────────────────
+import zipfile
+import io
+
 @app.route('/download/<int:rule_id>')
 def download(rule_id):
     db = get_db()
@@ -339,12 +428,28 @@ def download(rule_id):
     # Increment view count
     db.execute("UPDATE Corporate_Rules SET view_count = view_count + 1 WHERE id=?", (rule_id,))
     db.commit()
-    return send_from_directory(
-        os.path.abspath(app.config['UPLOAD_FOLDER']),
-        rule['file_path'],
-        as_attachment=False
-    )
+    
+    try:
+        files = json.loads(rule['file_path'])
+    except:
+        files = [rule['file_path']]
 
+    if len(files) == 1:
+        return send_from_directory(
+            os.path.abspath(app.config['UPLOAD_FOLDER']),
+            files[0],
+            as_attachment=False
+        )
+    else:
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w') as zf:
+            for f in files:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], f)
+                if os.path.exists(file_path):
+                    # add file to zip, taking only the actual original filename or keeping the unique name
+                    zf.write(file_path, os.path.basename(f))
+        memory_file.seek(0)
+        return send_file(memory_file, download_name=f"Rule_{rule_id}_documents.zip", as_attachment=True)
 
 # ════════════════════════════════════════════════════════════════════════════
 #  EMPLOYEE ROUTES (read-only)
@@ -401,6 +506,17 @@ def admin_dashboard():
     departments = db.execute(
         "SELECT DISTINCT department FROM Corporate_Rules ORDER BY department"
     ).fetchall()
+
+    # Analytics Data
+    dept_stats = db.execute("SELECT department, COUNT(*) as count FROM Corporate_Rules GROUP BY department ORDER BY count DESC").fetchall()
+    year_stats = db.execute("SELECT year, COUNT(*) as count FROM Corporate_Rules GROUP BY year ORDER BY year DESC LIMIT 15").fetchall()
+    cat_stats = db.execute("SELECT category, COUNT(*) as count FROM Corporate_Rules GROUP BY category ORDER BY count DESC LIMIT 8").fetchall()
+    recent = db.execute("SELECT * FROM Corporate_Rules ORDER BY created_at DESC LIMIT 10").fetchall()
+    activity = db.execute("SELECT * FROM Activity_Log ORDER BY created_at DESC LIMIT 15").fetchall()
+    total_views = db.execute("SELECT SUM(view_count) FROM Corporate_Rules").fetchone()[0] or 0
+    with_files = db.execute("SELECT COUNT(*) FROM Corporate_Rules WHERE file_path IS NOT NULL").fetchone()[0]
+    with_summary = db.execute("SELECT COUNT(*) FROM Corporate_Rules WHERE summary IS NOT NULL").fetchone()[0]
+
     return render_template(
         'admin_dashboard.html',
         rules=rules,
@@ -411,6 +527,14 @@ def admin_dashboard():
         recent_activity=recent_activity,
         top_viewed=top_viewed,
         departments=departments,
+        dept_stats=dept_stats,
+        year_stats=year_stats,
+        cat_stats=cat_stats,
+        recent=recent,
+        activity=activity,
+        total_views=total_views,
+        with_files=with_files,
+        with_summary=with_summary,
         active_section='dashboard',
     )
 
@@ -423,9 +547,12 @@ def upload_rule():
     year_str    = request.form.get('year', '').strip()
     department  = request.form.get('department', '').strip()
     description = request.form.get('description', '').strip()
+    files       = request.files.getlist('files')
 
-    if not all([title, category, year_str, department, description]):
-        flash('All required fields must be filled.', 'danger')
+    has_files = any(f and f.filename for f in files)
+
+    if not all([title, category, year_str, department]) or (not description and not has_files):
+        flash('All required fields must be filled (Title, Category, Year, Department, and either a Description or a File).', 'danger')
         return redirect(url_for('admin_dashboard'))
 
     try:
@@ -436,33 +563,35 @@ def upload_rule():
         flash('Invalid year. Must be between 1970 and 2030.', 'danger')
         return redirect(url_for('admin_dashboard'))
 
-    file_path = None
-    summary   = None
-    ocr_text  = None
+    saved_files = []
+    combined_ocr = []
+    
+    for file in files:
+        if file and file.filename:
+            if allowed_file(file.filename):
+                filename  = secure_filename(file.filename)
+                ts        = datetime.now().strftime('%Y%m%d%H%M%S')
+                unique_fn = f"{ts}_{department.lower()}_{year}_{filename}"
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_fn)
+                file.save(save_path)
+                saved_files.append(unique_fn)
 
-    file = request.files.get('file')
-    if file and file.filename:
-        if allowed_file(file.filename):
-            filename  = secure_filename(file.filename)
-            ts        = datetime.now().strftime('%Y%m%d%H%M%S')
-            unique_fn = f"{ts}_{department.lower()}_{year}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_fn)
-            file.save(save_path)
-            file_path = unique_fn
+                extracted = extract_document_text(save_path, filename)
+                if extracted:
+                    combined_ocr.append(extracted)
+            else:
+                flash(f'Unsupported file format: {file.filename}', 'danger')
+                return redirect(url_for('admin_dashboard'))
 
-            # Extract text for OCR/AI
-            extracted = extract_document_text(save_path, filename)
-            if extracted:
-                ocr_text = extracted
-                summary  = generate_summary(extracted)
-            elif description:
-                summary = generate_summary(description)
-        else:
-            flash('Unsupported file format. Use PDF, DOCX, TXT, PNG, JPG.', 'danger')
-            return redirect(url_for('admin_dashboard'))
-    else:
-        # Generate summary from description text
+    file_path = json.dumps(saved_files) if saved_files else None
+    ocr_text = "\n\n".join(combined_ocr) if combined_ocr else None
+    
+    if ocr_text:
+        summary = generate_summary(ocr_text)
+    elif description:
         summary = generate_summary(description)
+    else:
+        summary = None
 
     db = get_db()
     db.execute(
@@ -475,7 +604,6 @@ def upload_rule():
     log_activity('RULE_CREATED', f"Rule '{title}' created for {department} [{year}]")
     flash(f"Rule '{title}' published successfully." + (' AI summary generated.' if summary else ''), 'success')
     return redirect(url_for('admin_dashboard'))
-
 
 @app.route('/admin/edit/<int:rule_id>', methods=['POST'])
 @admin_required
@@ -495,31 +623,42 @@ def edit_rule(rule_id):
         return redirect(url_for('admin_dashboard'))
 
     db = get_db()
-    file = request.files.get('file')
+    files = request.files.getlist('files')
     now  = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    if file and file.filename:
-        if allowed_file(file.filename):
-            filename  = secure_filename(file.filename)
-            ts        = datetime.now().strftime('%Y%m%d%H%M%S')
-            unique_fn = f"{ts}_{department.lower()}_{year}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_fn)
-            file.save(save_path)
+    has_files = any(f and f.filename for f in files)
 
-            extracted = extract_document_text(save_path, filename)
-            summary   = generate_summary(extracted or description) if (extracted or description) else None
-            ocr_text  = extracted
+    if has_files:
+        saved_files = []
+        combined_ocr = []
+        for file in files:
+            if file and file.filename:
+                if allowed_file(file.filename):
+                    filename  = secure_filename(file.filename)
+                    ts        = datetime.now().strftime('%Y%m%d%H%M%S')
+                    unique_fn = f"{ts}_{department.lower()}_{year}_{filename}"
+                    save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_fn)
+                    file.save(save_path)
+                    saved_files.append(unique_fn)
 
-            db.execute(
-                '''UPDATE Corporate_Rules
-                   SET title=?, category=?, year=?, department=?, description_text=?,
-                       file_path=?, summary=?, ocr_text=?, updated_at=?
-                   WHERE id=?''',
-                (title, category, year, department, description, unique_fn, summary, ocr_text, now, rule_id)
-            )
-        else:
-            flash('Unsupported file format.', 'danger')
-            return redirect(url_for('admin_dashboard'))
+                    extracted = extract_document_text(save_path, filename)
+                    if extracted:
+                        combined_ocr.append(extracted)
+                else:
+                    flash(f'Unsupported file format: {file.filename}', 'danger')
+                    return redirect(url_for('admin_dashboard'))
+
+        file_path = json.dumps(saved_files)
+        ocr_text = "\n\n".join(combined_ocr) if combined_ocr else None
+        summary = generate_summary(ocr_text or description) if (ocr_text or description) else None
+
+        db.execute(
+            '''UPDATE Corporate_Rules
+               SET title=?, category=?, year=?, department=?, description_text=?,
+                   file_path=?, summary=?, ocr_text=?, updated_at=?
+               WHERE id=?''',
+            (title, category, year, department, description, file_path, summary, ocr_text, now, rule_id)
+        )
     else:
         db.execute(
             '''UPDATE Corporate_Rules
@@ -533,7 +672,6 @@ def edit_rule(rule_id):
     flash('Rule updated successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-
 @app.route('/admin/delete/<int:rule_id>', methods=['POST'])
 @admin_required
 def delete_rule(rule_id):
@@ -541,15 +679,20 @@ def delete_rule(rule_id):
     rule = db.execute("SELECT * FROM Corporate_Rules WHERE id=?", (rule_id,)).fetchone()
     if rule:
         if rule['file_path']:
-            fp = os.path.join(app.config['UPLOAD_FOLDER'], rule['file_path'])
-            if os.path.exists(fp):
-                os.remove(fp)
+            try:
+                files = json.loads(rule['file_path'])
+            except:
+                files = [rule['file_path']]
+            
+            for f_path in files:
+                fp = os.path.join(app.config['UPLOAD_FOLDER'], f_path)
+                if os.path.exists(fp):
+                    os.remove(fp)
         db.execute("DELETE FROM Corporate_Rules WHERE id=?", (rule_id,))
         db.commit()
         log_activity('RULE_DELETED', f"Rule '{rule['title']}' deleted")
         flash(f"Rule '{rule['title']}' deleted successfully.", 'success')
     return redirect(url_for('admin_dashboard'))
-
 
 # ── Admin Analytics ───────────────────────────────────────────────────────────
 @app.route('/admin/analytics')

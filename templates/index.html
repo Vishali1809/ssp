@@ -32,18 +32,13 @@
                 <!-- CTA Buttons -->
                 <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
                     {% if not session.get('user_id') %}
-                    <a href="{{ url_for('employee_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
-                        📋 Employee Portal
-                    </a>
-                    <a href="{{ url_for('login') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
-                        🔐 Admin Login
-                    </a>
+                    <!-- Buttons removed -->
                     {% else %}
                     <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sail-accent text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition text-sm">
                         ⚙ Go to Admin Dashboard →
                     </a>
                     {% endif %}
-                    <a href="#rules" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
+                    <a href="{{ url_for('employee_dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-xl font-bold border border-white/25 hover:bg-white/20 transition text-sm">
                         📖 Browse Rules
                     </a>
                 </div>
@@ -247,10 +242,12 @@
                     <a href="{{ url_for('download', rule_id=rule.id) }}" target="_blank"
                        class="inline-flex items-center gap-1.5 text-sm font-bold text-sail-blue hover:text-sail-mid transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        Download
+                        View Document
                     </a>
                     {% else %}
                     <span class="text-xs text-gray-400 italic">Text Only</span>
@@ -297,35 +294,7 @@
 </section>
 {% endif %}
 
-<!-- ═══════════════════════════ ACCESS PORTALS ════════════════════════════ -->
-<section class="py-14 px-4" style="background: linear-gradient(135deg, #0f3a63 0%, #1a5276 100%);">
-    <div class="max-w-screen-xl mx-auto">
-        <div class="text-center mb-10">
-            <h2 class="text-3xl font-black text-white" style="font-family:'Rajdhani',sans-serif;">Access Your Portal</h2>
-            <p class="text-blue-200 text-sm mt-2">Select your role to log in and access HR rules</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <!-- Employee -->
-            <a href="{{ url_for('employee_dashboard') }}" class="bg-white/10 border border-white/20 rounded-2xl p-8 text-center hover:bg-white/20 transition group block no-underline">
-                <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">👤</div>
-                <h3 class="text-white font-bold text-xl mb-2">Employee Portal</h3>
-                <p class="text-blue-200 text-sm mb-4">Search, filter, and view all HR rules. Download documents.</p>
-                <span class="inline-block bg-white/20 text-white text-sm font-bold px-5 py-2 rounded-xl border border-white/30 group-hover:bg-white/30 transition">
-                    Explore Portal →
-                </span>
-            </a>
-            <!-- Admin -->
-            <a href="{{ url_for('login') }}" class="bg-sail-accent/20 border border-sail-accent/30 rounded-2xl p-8 text-center hover:bg-sail-accent/30 transition group block no-underline">
-                <div class="text-5xl mb-4 group-hover:scale-110 transition inline-block">🔐</div>
-                <h3 class="text-white font-bold text-xl mb-2">Admin Portal</h3>
-                <p class="text-blue-200 text-sm mb-4">Upload, manage rules, OCR scanning, and analytics.</p>
-                <span class="inline-block bg-sail-accent text-white text-sm font-bold px-5 py-2 rounded-xl shadow group-hover:opacity-90 transition">
-                    Admin Login →
-                </span>
-            </a>
-        </div>
-    </div>
-</section>
+<!-- Access Portals Section Removed -->
 
 {% endblock %}
 
